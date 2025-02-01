@@ -1,0 +1,89 @@
+#pragma once
+
+// Version information
+#define VERSION_MAJOR @VERSION_MAJOR @
+#define VERSION_MINOR @VERSION_MINOR @
+#define VERSION_PATCH @VERSION_PATCH @
+#define VERSION_STRING "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
+
+// Build information
+#define BUILD_DATE "@BUILD_DATE@"
+#define BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+
+#ifdef _WIN64
+#define ARCHITECTURE "x64"
+#else
+#define ARCHITECTURE "x86"
+#endif
+
+// Product information
+#define PRODUCT_NAME "WoW Lua Injector"
+#define PRODUCT_DESCRIPTION "Advanced Lua Code Injection Tool"
+#define LEGAL_COPYRIGHT "Copyright (c) 2025. All rights reserved."
+
+// Feature flags
+#ifdef ENABLE_PATTERN_SCANNING
+#define FEATURE_PATTERN_SCANNING 1
+#else
+#define FEATURE_PATTERN_SCANNING 0
+#endif
+
+#ifdef ENABLE_WARDEN_DETECTION
+#define FEATURE_WARDEN_DETECTION 1
+#else
+#define FEATURE_WARDEN_DETECTION 0
+#endif
+
+#ifdef ENABLE_IAT_HIDING
+#define FEATURE_IAT_HIDING 1
+#else
+#define FEATURE_IAT_HIDING 0
+#endif
+
+#ifdef ENABLE_THREAD_HIJACKING
+#define FEATURE_THREAD_HIJACKING 1
+#else
+#define FEATURE_THREAD_HIJACKING 0
+#endif
+
+// Build configuration
+#ifdef _DEBUG
+#define BUILD_CONFIG "Debug"
+#else
+#define BUILD_CONFIG "Release"
+#endif
+
+// Compiler information
+#ifdef _MSC_VER
+#define COMPILER_NAME "MSVC"
+#define COMPILER_VERSION _MSC_VER
+#endif
+
+// Platform specific
+#ifdef _WIN32
+#define PLATFORM "Windows"
+#ifdef _WIN64
+#define PLATFORM_ARCH "64-bit"
+#else
+#define PLATFORM_ARCH "32-bit"
+#endif
+#endif
+
+// Full version string with all information
+#define FULL_VERSION_STRING PRODUCT_NAME " v" VERSION_STRING " (" ARCHITECTURE ") " BUILD_CONFIG
+
+// Feature information string
+#define FEATURE_INFO_STRING                             \
+    "Features:"                                         \
+    "\n- Pattern Scanning: " FEATURE_PATTERN_SCANNING   \
+        ? "Enabled"                                     \
+    : "Disabled"                                        \
+      "\n- Warden Detection: " FEATURE_WARDEN_DETECTION \
+        ? "Enabled"                                     \
+    : "Disabled"                                        \
+      "\n- IAT Hiding: " FEATURE_IAT_HIDING             \
+        ? "Enabled"                                     \
+    : "Disabled"                                        \
+      "\n- Thread Hijacking: " FEATURE_THREAD_HIJACKING \
+        ? "Enabled"                                     \
+        : "Disabled"

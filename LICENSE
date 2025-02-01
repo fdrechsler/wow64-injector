@@ -1,0 +1,40 @@
+MIT License
+
+Copyright (c) 2025 WoW Lua Injector Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+DISCLAIMER:
+This software is provided for educational purposes only. The authors are not
+responsible for any misuse or damages caused by this software. Using this
+software to modify game clients may violate terms of service and result in
+account penalties. Use at your own risk.
+
+ADDITIONAL TERMS:
+1. This software may not be used for commercial purposes without explicit
+   written permission from the authors.
+2. Any modifications or derivative works must maintain all copyright notices
+   and disclaimers.
+3. The authors reserve the right to modify these terms at any time.
+4. By using this software, you agree to these terms and conditions.
+
+ANTI-ABUSE NOTICE:
+This software implements various anti-debugging and anti-analysis techniques
+for educational purposes only. These techniques must not be used to evade
+detection of malicious software or to cause harm to computer systems.
