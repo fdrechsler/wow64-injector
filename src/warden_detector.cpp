@@ -38,7 +38,7 @@ bool WardenDetector::ScanMemoryRegion(const MemoryRegion &region)
 
     for (const auto &signature : WARDEN_SIGNATURES)
     {
-        for (size_t i = 0; i < buffer.size() - signature.size(); i++)
+        for (int i = 0; i < static_cast<int>(buffer.size() - signature.size()); i++)
         {
             if (memcmp(buffer.data() + i, signature.data(), signature.size()) == 0)
             {
@@ -187,4 +187,24 @@ DWORD WINAPI WardenDetector::MonitorThread(LPVOID param)
         Sleep(100); // Check every 100ms
     }
     return 0;
+}
+
+// Tests
+bool WardenDetector::TestSignatureScanning()
+{
+    // Test signature scanning
+    std::vector<BYTE> buffer = {0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x14, 0x53, 0x56, 0x57};
+    return ScanMemoryRegion({buffer.data(), buffer.size(), PAGE_EXECUTE_READWRITE});
+}
+
+bool WardenDetector::TestBehaviorAnalysis()
+{
+    // Test behavior analysis
+    return MonitorThreadActivity();
+}
+
+bool WardenDetector::TestTimingChecks()
+{
+    // Test timing checks
+    return AnalyzeMemoryPermissions();
 }

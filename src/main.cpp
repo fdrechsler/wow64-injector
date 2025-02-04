@@ -12,11 +12,19 @@ namespace
     void PrintBanner()
     {
         const char *banner = R"(
-╔══════════════════════════════════════════════════════════╗
-║              WoW Lua Injector - Advanced                 ║
-║              Version %s (%s)                        ║
-║          Build: %s - %s                       ║
-╚══════════════════════════════════════════════════════════╝
+           
+        _         __  ______  _ _     _   
+       | |    __ _\ \/ / __ )| (_)___| |_ 
+       | |   / _` |\  /|  _ \| | / __| __|
+       | |__| (_| |/  \| |_) | | \__ \ |_ 
+       |_____\__,_/_/\_\____/|_|_|___/\__|
+                                        
+
+              Version %s (%s)                       
+              Build: %s - %s      
+
+
+
 )";
 
         printf(banner, VERSION_STRING, ARCHITECTURE, BUILD_DATE, BUILD_CONFIG);
@@ -48,7 +56,7 @@ namespace
 
     int RunTests(const CliParser::Options &options)
     {
-        Logging::Info("Starting tests: " + CliParser::TestModeToString(options.testMode));
+        Logger::Info("Starting tests: " + CliParser::TestModeToString(options.testMode));
 
         bool allPassed = true;
         LuaInjector injector;
@@ -57,15 +65,15 @@ namespace
         {
         case CliParser::TestMode::ANTI_DEBUG:
         {
-            Logging::Info("Running Anti-Debug test...");
+            Logger::Info("Running Anti-Debug test...");
             bool result = IsDebuggerPresent() == FALSE;
             if (result)
             {
-                Logging::Info("Anti-Debug test: PASSED");
+                Logger::Info("Anti-Debug test: PASSED");
             }
             else
             {
-                Logging::Error("Anti-Debug test: FAILED");
+                Logger::Error("Anti-Debug test: FAILED");
                 allPassed = false;
             }
             break;
@@ -73,15 +81,15 @@ namespace
 
         case CliParser::TestMode::PATTERN_SCAN:
         {
-            Logging::Info("Running Pattern Scanning test...");
+            Logger::Info("Running Pattern Scanning test...");
             bool result = injector.TestPatternScanning();
             if (result)
             {
-                Logging::Info("Pattern Scanning test: PASSED");
+                Logger::Info("Pattern Scanning test: PASSED");
             }
             else
             {
-                Logging::Error("Pattern Scanning test: FAILED");
+                Logger::Error("Pattern Scanning test: FAILED");
                 allPassed = false;
             }
             break;
@@ -89,15 +97,15 @@ namespace
 
         case CliParser::TestMode::IAT_HIDING:
         {
-            Logging::Info("Running IAT Hiding test...");
+            Logger::Info("Running IAT Hiding test...");
             bool result = injector.TestIATHiding();
             if (result)
             {
-                Logging::Info("IAT Hiding test: PASSED");
+                Logger::Info("IAT Hiding test: PASSED");
             }
             else
             {
-                Logging::Error("IAT Hiding test: FAILED");
+                Logger::Error("IAT Hiding test: FAILED");
                 allPassed = false;
             }
             break;
@@ -105,15 +113,15 @@ namespace
 
         case CliParser::TestMode::WARDEN_DETECTION:
         {
-            Logging::Info("Running Warden Detection test...");
+            Logger::Info("Running Warden Detection test...");
             bool result = injector.TestWardenDetection();
             if (result)
             {
-                Logging::Info("Warden Detection test: PASSED");
+                Logger::Info("Warden Detection test: PASSED");
             }
             else
             {
-                Logging::Error("Warden Detection test: FAILED");
+                Logger::Error("Warden Detection test: FAILED");
                 allPassed = false;
             }
             break;
@@ -125,11 +133,11 @@ namespace
             bool antiDebugResult = IsDebuggerPresent() == FALSE;
             if (antiDebugResult)
             {
-                Logging::Info("Anti-Debug test: PASSED");
+                Logger::Info("Anti-Debug test: PASSED");
             }
             else
             {
-                Logging::Error("Anti-Debug test: FAILED");
+                Logger::Error("Anti-Debug test: FAILED");
                 allPassed = false;
             }
 
@@ -137,11 +145,11 @@ namespace
             bool patternResult = injector.TestPatternScanning();
             if (patternResult)
             {
-                Logging::Info("Pattern Scanning test: PASSED");
+                Logger::Info("Pattern Scanning test: PASSED");
             }
             else
             {
-                Logging::Error("Pattern Scanning test: FAILED");
+                Logger::Error("Pattern Scanning test: FAILED");
                 allPassed = false;
             }
 
@@ -149,11 +157,11 @@ namespace
             bool iatResult = injector.TestIATHiding();
             if (iatResult)
             {
-                Logging::Info("IAT Hiding test: PASSED");
+                Logger::Info("IAT Hiding test: PASSED");
             }
             else
             {
-                Logging::Error("IAT Hiding test: FAILED");
+                Logger::Error("IAT Hiding test: FAILED");
                 allPassed = false;
             }
 
@@ -161,35 +169,34 @@ namespace
             bool wardenResult = injector.TestWardenDetection();
             if (wardenResult)
             {
-                Logging::Info("Warden Detection test: PASSED");
+                Logger::Info("Warden Detection test: PASSED");
             }
             else
             {
-                Logging::Error("Warden Detection test: FAILED");
+                Logger::Error("Warden Detection test: FAILED");
                 allPassed = false;
             }
             break;
         }
 
         default:
-            Logging::Error("Invalid test mode");
+            Logger::Error("Invalid test mode");
             return 1;
         }
 
         if (allPassed)
         {
-            Logging::Info("All tests passed successfully");
+            Logger::Info("All tests passed successfully");
             return 0;
         }
         else
         {
-            Logging::Error("One or more tests failed");
+            Logger::Error("One or more tests failed");
             return 1;
         }
     }
 }
-
-int main(int argc, char *argv[])
+int _process(int argc, char *argv[])
 {
     try
     {
@@ -212,7 +219,7 @@ int main(int argc, char *argv[])
         // Check admin privileges
         if (!CheckAdminPrivileges())
         {
-            Logging::Critical("This program requires administrator privileges");
+            Logger::Critical("This program requires administrator privileges");
             return 1;
         }
 
@@ -223,12 +230,12 @@ int main(int argc, char *argv[])
         }
 
         // Normal injection mode
-        Logging::Info("Starting injection process...");
+        Logger::Info("Starting injection process...");
 
         // Basic anti-debug check
         if (IsDebuggerPresent())
         {
-            Logging::Warning("Debugger detected, exiting...");
+            Logger::Warning("Debugger detected, exiting...");
             return 1;
         }
 
@@ -240,34 +247,50 @@ int main(int argc, char *argv[])
         {
             if (!injector.SetCustomScript(options.customLuaScript))
             {
-                Logging::Error("Failed to load custom script");
+                Logger::Error("Failed to load custom script");
                 return 1;
             }
         }
 
-        Logging::Info("Attempting injection...");
+        Logger::Info("Attempting injection...");
 
         // Perform injection
         if (injector.Inject())
         {
-            Logging::Info("Injection completed successfully");
+            Logger::Info("Injection completed successfully");
         }
         else
         {
-            Logging::Error("Injection failed");
+            Logger::Error("Injection failed");
             return 1;
         }
     }
     catch (const std::exception &e)
     {
-        Logging::Critical(std::string("An error occurred: ") + e.what());
+        Logger::Critical(std::string("An error occurred: ") + e.what());
         return 1;
     }
     catch (...)
     {
-        Logging::Critical("An unknown error occurred");
+        Logger::Critical("An unknown error occurred");
         return 1;
     }
 
     return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    int result = _process(argc, argv);
+    if (result == 0)
+    {
+        std::cout << "Press any key to exit..." << std::endl;
+        std::cin.get();
+    }
+    if (result == 1)
+    {
+        std::cout << "Press any key to exit..." << std::endl;
+        std::cin.get();
+    }
+    return result;
 }

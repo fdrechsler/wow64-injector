@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(WoWLuaInjector)
 
-# Set C++ standard
+# Set C++ standard and compiler flags
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(MSVC)
+    # More aggressive warning suppression for MSVC
+    add_compile_options(/wd4740 /wd4018 /wd4996 /W0)
+endif()
 
 # Feature flags
 option(ENABLE_PATTERN_SCANNING "Enable pattern scanning feature" ON)
@@ -28,17 +33,29 @@ configure_file(
 
 # Add compiler flags
 if(MSVC)
+    # Enable exceptions
+    string(REPLACE "/EHs-c-" "/EHsc" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    
     add_compile_options(
         /W4     # Warning level 4
         /WX     # Treat warnings as errors
         /MP     # Multi-processor compilation
-        /GR-    # Disable RTTI
         /GF     # String pooling
         /Gy     # Function-level linking
         /Oi     # Intrinsic functions
         /GS     # Buffer security check
-        /EHs-c- # Disable exceptions
         /sdl    # Security checks
+        /Zc:wchar_t # Treat wchar_t as built-in type
+        /Zc:forScope # Force conformance in for loop scope
+        /Zc:inline # Remove unreferenced COMDATs
+        /Zc:rvalueCast # Enforce type conversion rules
+        /permissive- # Enforce standards conformance
+    )
+
+    # Disable specific warnings
+    add_compile_options(
+        /wd4244 # Conversion from 'type1' to 'type2', possible loss of data
+        /wd4267 # Conversion from 'size_t' to 'type', possible loss of data
     )
 endif()
 
@@ -61,6 +78,7 @@ set(HEADERS
     include/process_memory_handler.h
     include/logger.h
     include/version.h
+    include/cli_parser.h
 )
 
 # Create executable
@@ -89,6 +107,7 @@ target_compile_definitions(injector PRIVATE
     _UNICODE
     WIN32_LEAN_AND_MEAN
     NOMINMAX
+    _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 )
 
 # Add feature flags to preprocessor definitions

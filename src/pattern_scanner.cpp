@@ -1,6 +1,7 @@
 #include "../include/pattern_scanner.h"
 #include <sstream>
 #include <iomanip>
+#include "../include/logger.h" // Include the Logger header file
 
 // Known WoW function patterns
 const std::vector<PatternScanner::Pattern> WOW_PATTERNS = {
@@ -24,6 +25,35 @@ const std::vector<PatternScanner::Pattern> WOW_PATTERNS = {
         "FrameScript__Execute",
         "55 8B EC 83 EC ? 53 8B 5D ? 56 57 8B F9 85 DB 0F 84",
         0x0)};
+
+// Test implementations
+bool PatternScanner::TestBasicPatternMatching()
+{
+    auto testPattern = CreatePattern("test", "AA BB CC DD EE", 0);
+    std::vector<BYTE> testBytes = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
+    return ScanRegion(MEMORY_BASIC_INFORMATION{}, testPattern).has_value();
+}
+
+bool PatternScanner::TestWildcardPatterns()
+{
+    auto testPattern = CreatePattern("wildcard", "AA ?? CC DD ?E", 0);
+    std::vector<BYTE> testBytes = {0xAA, 0x11, 0xCC, 0xDD, 0xFE};
+    return ScanRegion(MEMORY_BASIC_INFORMATION{}, testPattern).has_value();
+}
+
+bool PatternScanner::TestOffsetCalculation()
+{
+    auto testPattern = CreatePattern("offset", "AA BB CC", 5);
+    auto result = ScanRegion(MEMORY_BASIC_INFORMATION{}, testPattern);
+    return result.has_value() && (result->address == (uintptr_t)100 + testPattern.offset);
+}
+
+uintptr_t PatternScanner::FindPattern(const char *pattern, const char *, const char *)
+{
+    auto pat = CreatePattern("", pattern, 0);
+    auto results = ScanProcess({pat});
+    return !results.empty() ? results[0].address : 0;
+}
 
 PatternScanner::PatternScanner(HANDLE process) : processHandle(process)
 {
@@ -51,6 +81,9 @@ void PatternScanner::GetProcessMemoryRegions()
 
 std::vector<std::pair<BYTE, bool>> PatternScanner::ParsePattern(const std::string &pattern)
 {
+
+    Logger::Debug("Parsing pattern: " + pattern);
+
     std::vector<std::pair<BYTE, bool>> result;
     std::istringstream iss(pattern);
     std::string byte;
@@ -63,7 +96,22 @@ std::vector<std::pair<BYTE, bool>> PatternScanner::ParsePattern(const std::strin
         }
         else
         {
-            result.push_back({(BYTE)std::stoi(byte, nullptr, 16), true});
+            try
+            {
+                result.push_back({(BYTE)std::stoi(byte, nullptr, 16), true});
+            }
+            catch (const std::invalid_argument &)
+            {
+                // Handle the error or log it
+                Logger::Error("Invalid byte value in pattern: " + byte);
+                result.push_back({0, false});
+            }
+            catch (const std::out_of_range &)
+            {
+                // Handle the error or log it
+                Logger::Error("Invalid byte value in pattern: " + byte);
+                result.push_back({0, false});
+            }
         }
     }
     return result;

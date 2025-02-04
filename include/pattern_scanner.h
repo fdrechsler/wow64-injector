@@ -25,6 +25,14 @@ public:
     std::vector<ScanResult> ScanProcess(const std::vector<Pattern> &patterns);
     static Pattern CreatePattern(const std::string &name, const std::string &pattern, int32_t offset = 0);
 
+    // Test methods
+    bool TestBasicPatternMatching();
+    bool TestWildcardPatterns();
+    bool TestOffsetCalculation();
+
+    // Pattern finding
+    uintptr_t FindPattern(const char *pattern, const char *mask, const char *moduleName);
+
 private:
     HANDLE processHandle;
     std::vector<MEMORY_BASIC_INFORMATION> memoryRegions;

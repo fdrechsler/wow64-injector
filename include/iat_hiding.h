@@ -9,6 +9,10 @@ public:
     static void HideIAT();
     static void RestoreIAT();
 
+    // Test methods
+    static bool TestHidingMechanism();
+    static bool TestRestoration();
+
 private:
     struct ImportBackup
     {

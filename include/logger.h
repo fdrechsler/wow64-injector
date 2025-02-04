@@ -6,76 +6,50 @@
 #include <ctime>
 #include <windows.h>
 
-namespace Logging
+class Logger
 {
-    enum class LogLevel
+public:
+    static void Debug(const std::string &message)
     {
-        DEBUG,
-        INFO,
-        WARNING,
-        ERROR,
-        CRITICAL
-    };
+        LogWithColor(message, FOREGROUND_BLUE | FOREGROUND_INTENSITY, "DEBUG");
+    }
 
-    inline void Log(LogLevel level, const std::string &message)
+    static void Info(const std::string &message)
+    {
+        LogWithColor(message, FOREGROUND_GREEN | FOREGROUND_INTENSITY, "INFO");
+    }
+
+    static void Warning(const std::string &message)
+    {
+        LogWithColor(message, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "WARNING");
+    }
+
+    static void Error(const std::string &message)
+    {
+        LogWithColor(message, FOREGROUND_RED | FOREGROUND_INTENSITY, "ERROR");
+    }
+
+    static void Critical(const std::string &message)
+    {
+        LogWithColor(message, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY, "CRITICAL");
+    }
+
+private:
+    static void LogWithColor(const std::string &message, WORD color, const char *level)
     {
         auto t = std::time(nullptr);
-        auto tm = *std::localtime(&t);
+        std::tm tm;
+        localtime_s(&tm, &t);
         std::ostringstream oss;
         oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
 
-        // Get console handle for color output
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-        // Set color based on level
-        WORD color;
-        const char *prefix;
-        switch (level)
-        {
-        case LogLevel::DEBUG:
-            color = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-            prefix = "DEBUG";
-            break;
-        case LogLevel::INFO:
-            color = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-            prefix = "INFO";
-            break;
-        case LogLevel::WARNING:
-            color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-            prefix = "WARNING";
-            break;
-        case LogLevel::ERROR:
-            color = FOREGROUND_RED | FOREGROUND_INTENSITY;
-            prefix = "ERROR";
-            break;
-        case LogLevel::CRITICAL:
-            color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-            prefix = "CRITICAL";
-            break;
-        default:
-            color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-            prefix = "UNKNOWN";
-            break;
-        }
-
-        // Save current attributes
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         GetConsoleScreenBufferInfo(hConsole, &csbi);
 
-        // Set color
         SetConsoleTextAttribute(hConsole, color);
-
-        // Print log message
-        std::cout << "[" << oss.str() << "] [" << std::setw(8) << prefix << "] "
+        std::cout << "[" << oss.str() << "] [" << std::setw(8) << level << "] "
                   << message << std::endl;
-
-        // Restore original attributes
         SetConsoleTextAttribute(hConsole, csbi.wAttributes);
     }
-
-    inline void Debug(const std::string &message) { Log(LogLevel::DEBUG, message); }
-    inline void Info(const std::string &message) { Log(LogLevel::INFO, message); }
-    inline void Warning(const std::string &message) { Log(LogLevel::WARNING, message); }
-    inline void Error(const std::string &message) { Log(LogLevel::ERROR, message); }
-    inline void Critical(const std::string &message) { Log(LogLevel::CRITICAL, message); }
-}
+};

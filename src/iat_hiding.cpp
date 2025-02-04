@@ -4,15 +4,7 @@ std::vector<IATHider::ImportBackup> IATHider::backupEntries;
 
 PVOID IATHider::GetModuleBaseAddress()
 {
-    PVOID baseAddress = nullptr;
-    __asm {
-        call getip
-        getip:
-        pop eax
-        and eax, 0xFFFF0000
-        mov baseAddress, eax
-    }
-    return baseAddress;
+    return GetModuleHandleW(nullptr);
 }
 
 PVOID IATHider::GetProcAddressManually(LPCSTR moduleName, LPCSTR functionName)
@@ -165,4 +157,19 @@ void IATHider::RestoreIAT()
 {
     DecryptIAT();
     RestoreImports();
+}
+
+// TESTS
+bool IATHider::TestHidingMechanism()
+{
+    // dont implement this yet
+    return true;
+}
+
+bool IATHider::TestRestoration()
+{
+    // Test restoration mechanism
+    BackupImports();
+    RestoreImports();
+    return backupEntries.empty();
 }

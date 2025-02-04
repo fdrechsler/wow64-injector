@@ -148,7 +148,6 @@ bool ProcessMemoryHandler::ProtectMemory(LPVOID address, SIZE_T size, DWORD newP
 
 bool ProcessMemoryHandler::FindPatternAndAllocate(SIZE_T size, DWORD protection, LPVOID &outAddress)
 {
-    MEMORY_BASIC_INFORMATION mbi;
     LPVOID address = nullptr;
 
     // Find a suitable memory region

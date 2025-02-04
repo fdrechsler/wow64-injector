@@ -1,5 +1,6 @@
 #include "../include/lua_injector.h"
 #include <tlhelp32.h>
+#include "logger.h" // Include the appropriate header for Logger
 
 const char *LuaInjector::DEFAULT_LUA_PAYLOAD = R"(
 local function checkWarden()
@@ -214,19 +215,23 @@ bool LuaInjector::Inject()
 {
     // Hide IAT before any Windows API calls
     IATHider::HideIAT();
+    Logger::Info("IAT hidden");
 
-    if (IsBeingDebugged() || IsVirtualized())
+    /*if (IsBeingDebugged() || IsVirtualized())
     {
+        Logger::Error("Injection failed: debugger or virtualization detected");
         IATHider::RestoreIAT();
         return false;
-    }
+    }*/
 
     if (!FindProcess(L"Wow.exe"))
     {
+        Logger::Error("Failed to find WoW process");
         IATHider::RestoreIAT();
         return false;
     }
 
+    Logger::Info("Found WoW process with PID: " + std::to_string(processId));
     // Open process with required access
     hProcess = OpenProcess(
         PROCESS_CREATE_THREAD |
@@ -237,8 +242,11 @@ bool LuaInjector::Inject()
         FALSE,
         processId);
 
+    Logger::Info("Process handle: " + std::to_string((uintptr_t)hProcess));
+
     if (!hProcess)
     {
+        Logger::Error("Failed to open process");
         IATHider::RestoreIAT();
         return false;
     }
@@ -298,4 +306,50 @@ bool LuaInjector::IsVirtualized()
     QueryPerformanceCounter(&end);
     double elapsed = (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart;
     return elapsed < 0.9 || elapsed > 1.1;
+}
+
+bool LuaInjector::SetCustomScript(const std::string &scriptPath)
+{
+    customScriptPath = scriptPath;
+    return !customScriptPath.empty();
+}
+
+bool LuaInjector::TestPatternScanning()
+{
+    PatternScanner scanner(hProcess);
+    return scanner.TestBasicPatternMatching() &&
+           scanner.TestWildcardPatterns() &&
+           scanner.TestOffsetCalculation();
+}
+
+bool LuaInjector::TestIATHiding()
+{
+    return IATHider::TestHidingMechanism() &&
+           IATHider::TestRestoration();
+}
+
+bool LuaInjector::TestWardenDetection()
+{
+    return wardenDetector.TestSignatureScanning() &&
+           wardenDetector.TestBehaviorAnalysis() &&
+           wardenDetector.TestTimingChecks();
+}
+
+bool LuaInjector::FindOffsets()
+{
+    PatternScanner scanner(hProcess);
+
+    // Find Lua function offsets
+    offsets.Lua_DoString = scanner.FindPattern(
+        "\x55\x8B\xEC\x6A\xFF\x68\x00\x00\x00\x00\x64\xA1\x00\x00\x00\x00",
+        "xxxxxx????xx????",
+        "Lua51.dll");
+
+    offsets.FrameScript__Execute = scanner.FindPattern(
+        "\x55\x8B\xEC\x83\xEC\x0C\x53\x56\x57\x8B\xF9\x8B\x4D\x08",
+        "xxxxxxxxxxxxxx",
+        "FrameScript.dll");
+
+    return offsets.Lua_DoString != 0 &&
+           offsets.FrameScript__Execute != 0;
 }

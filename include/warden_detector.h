@@ -22,6 +22,11 @@ public:
     };
 
     void InitializeWardenDetection(HANDLE process);
+
+    // Test methods
+    bool TestSignatureScanning();
+    bool TestBehaviorAnalysis();
+    bool TestTimingChecks();
     bool IsWardenActive();
     static DWORD WINAPI MonitorThread(LPVOID param);
 
