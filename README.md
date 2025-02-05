@@ -2,6 +2,8 @@
 
 An advanced Lua code injection tool with sophisticated anti-detection features.
 
+![Image](image.png)
+
 ## Features
 
 - **Pattern Scanning**: Dynamic offset detection for version independence
