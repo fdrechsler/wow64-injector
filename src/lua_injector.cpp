@@ -19,6 +19,7 @@ local function main()
 end
 
 C_Timer.After(0.1, main)
+ C_Timer.NewTimer(3, function() print("Hello X") end)
 )";
 
 // Shellcode to execute Lua_DoString
@@ -58,7 +59,18 @@ LuaInjector::~LuaInjector()
 {
     CleanupInjection();
 }
+std::vector<BYTE> LuaInjector::ConvertCharPointerToVector(const char *payload)
+{
+    std::vector<BYTE> vectorbytes;
+    size_t len = strlen(payload);
+    vectorbytes.resize(len);
 
+    for (size_t i = 0; i < len; i++)
+    {
+        vectorbytes[i] = payload[i];
+    }
+    return vectorbytes;
+}
 std::vector<BYTE> LuaInjector::EncryptPayload(const char *payload)
 {
     std::vector<BYTE> encrypted;
@@ -169,22 +181,34 @@ bool LuaInjector::AllocateAndInject(const std::vector<BYTE> &payload)
         ProcessMemoryHandler::MemoryAllocationType::MEM_COMMIT_PATTERN);
 
     if (!payloadAddress)
+    {
+        Logger::Error("Failed to allocate memory for payload");
         return false;
+    }
 
+    Logger::Info("Allocated memory for payload at: " + std::to_string((uintptr_t)payloadAddress));
     // Write encrypted payload
     SIZE_T written;
     if (!memoryHandler->WriteMemory(payloadAddress, payload.data(), payload.size(), &written))
     {
+        Logger::Error("Failed to write payload to allocated memory");
         return false;
     }
+
+    Logger::Info("Wrote payload to allocated memory: " + std::to_string(written) + " bytes");
 
     // Allocate memory for shellcode
     LPVOID shellcodeAddress = memoryHandler->AllocateMemory(
         SHELLCODE_SIZE,
         PAGE_READWRITE);
 
+    Logger::Info("Allocated memory for shellcode at: " + std::to_string((uintptr_t)shellcodeAddress));
+
     if (!shellcodeAddress)
+    {
+        Logger::Error("Failed to allocate memory for shellcode");
         return false;
+    }
 
     // Prepare shellcode with proper address
     std::vector<BYTE> modifiedShellcode(SHELLCODE, SHELLCODE + SHELLCODE_SIZE);
@@ -194,18 +218,35 @@ bool LuaInjector::AllocateAndInject(const std::vector<BYTE> &payload)
     *(uintptr_t *)(&modifiedShellcode[12]) = offsets.Lua_DoString;
 #endif
 
+    // call Lua_DoString
+
+#ifdef _WIN64
+    *(uintptr_t *)(&modifiedShellcode[11]) = offsets.FrameScript__Execute;
+#else
+    *(uintptr_t *)(&modifiedShellcode[11]) = offsets.FrameScript__Execute;
+#endif
+
+    // CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)offsets.FrameScript__Execute, NULL, 0, NULL);
+
     // Write shellcode
     if (!memoryHandler->WriteMemory(shellcodeAddress, modifiedShellcode.data(), SHELLCODE_SIZE))
     {
+
+        Logger::Error("Failed to write shellcode to allocated memory");
         return false;
     }
 
+    Logger::Info("Wrote shellcode to allocated memory");
     // Change shellcode protection to executable
     DWORD oldProtect;
     if (!memoryHandler->ProtectMemory(shellcodeAddress, SHELLCODE_SIZE, PAGE_EXECUTE_READ, &oldProtect))
     {
+        Logger::Error("Failed to change shellcode memory protection");
         return false;
     }
+    CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)offsets.FrameScript__Execute, NULL, 0, NULL);
+
+    Logger::Info("Shellcode memory protection changed to PAGE_EXECUTE_READ");
 
     // Hijack thread to execute shellcode
     return HijackGameThread(shellcodeAddress);
@@ -267,12 +308,13 @@ bool LuaInjector::Inject()
 
     // Prepare and inject payload
     const char *scriptToUse = customScriptPath.empty() ? DEFAULT_LUA_PAYLOAD : customScriptPath.c_str();
-    auto encrypted = EncryptPayload(scriptToUse);
+    // auto encrypted = EncryptPayload(scriptToUse);
+    auto encrypted = ConvertCharPointerToVector(scriptToUse);
     bool success = AllocateAndInject(encrypted);
 
     // Cleanup
-    CleanupInjection();
-    IATHider::RestoreIAT();
+    // CleanupInjection();
+    // IATHider::RestoreIAT();
 
     return success;
 }
@@ -338,17 +380,27 @@ bool LuaInjector::TestWardenDetection()
 bool LuaInjector::FindOffsets()
 {
     PatternScanner scanner(hProcess);
-
     // Find Lua function offsets
     offsets.Lua_DoString = scanner.FindPattern(
-        "\x55\x8B\xEC\x6A\xFF\x68\x00\x00\x00\x00\x64\xA1\x00\x00\x00\x00",
+        "48 89 ? 24 ? 48 83 EC",
         "xxxxxx????xx????",
         "Lua51.dll");
 
-    offsets.FrameScript__Execute = scanner.FindPattern(
-        "\x55\x8B\xEC\x83\xEC\x0C\x53\x56\x57\x8B\xF9\x8B\x4D\x08",
-        "xxxxxxxxxxxxxx",
-        "FrameScript.dll");
+    if (offsets.Lua_DoString == 0)
+    {
+        Logger::Error("Failed to find Lua_DoString offset");
+    }
+
+    offsets.FrameScript__Execute = scanner.FindPattern("48 89 ? 24 ? 48 83 EC 28 ? ?", "xxxxxxxxxxxxxx", "FrameScript.dll");
+
+    if (offsets.FrameScript__Execute == 0)
+    {
+        Logger::Error("Failed to find FrameScript__Execute offset");
+    }
+    Logger::Info("Found offsets: Lua_DoString: " + std::to_string(offsets.Lua_DoString) +
+                 ", FrameScript__Execute: " + std::to_string(offsets.FrameScript__Execute));
+
+    // call offset for FrameScript__Execute
 
     return offsets.Lua_DoString != 0 &&
            offsets.FrameScript__Execute != 0;

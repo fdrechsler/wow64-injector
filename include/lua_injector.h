@@ -40,6 +40,7 @@ private:
     } offsets;
 
     std::vector<BYTE> EncryptPayload(const char *payload);
+    std::vector<BYTE> ConvertCharPointerToVector(const char *payload);
     bool FindProcess(const wchar_t *processName);
     bool FindOffsets();
     bool IsBeingDebugged();

@@ -1,7 +1,7 @@
 #include "../include/process_memory_handler.h"
 #include <algorithm>
 #include <tlhelp32.h>
-
+#include "logger.h"
 ProcessMemoryHandler::ProcessMemoryHandler(HANDLE processHandle) : processHandle(processHandle)
 {
     // Initialize NT API function pointers
@@ -78,6 +78,7 @@ bool ProcessMemoryHandler::HijackThread(DWORD threadId, LPVOID newAddress)
     HANDLE threadHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, threadId);
     if (!threadHandle)
     {
+        Logger::Error("Failed to open thread for hijacking");
         return false;
     }
 
@@ -89,6 +90,7 @@ bool ProcessMemoryHandler::HijackThread(DWORD threadId, LPVOID newAddress)
     context.originalContext.ContextFlags = CONTEXT_FULL;
     if (NT_SUCCESS(NtGetContextThread(threadHandle, &context.originalContext)))
     {
+        Logger::Info("Successfully got thread context");
         // Create new context
         CONTEXT newContext = context.originalContext;
 #ifdef _WIN64
@@ -100,6 +102,7 @@ bool ProcessMemoryHandler::HijackThread(DWORD threadId, LPVOID newAddress)
         // Set new context
         if (NT_SUCCESS(NtSetContextThread(threadHandle, &newContext)))
         {
+            Logger::Info("Successfully set new thread context");
             context.isHijacked = true;
             hijackedThreads.push_back(context);
             return true;
